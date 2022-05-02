@@ -41,28 +41,76 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('rmd')
 		.setDescription('To set a reminder')
-		.addStringOption(option =>
-		option.setName('title')
-			.setDescription('reminder\'s title')
-				.setRequired(true))
-		.addNumberOption(option =>
-		option.setName('number')
-			.setDescription('number of time')
-			.setRequired(true))
-		.addStringOption(option =>
-		option.setName('unit')
-			.setDescription('unit of time')
-			.setRequired(true)
-				.addChoice('seconds', 'seconds')
-				.addChoice('minutes', 'minutes')
-				.addChoice('hours', 'hours')
-				.addChoice('days', 'days')
-				.addChoice('weeks', 'weeks')
-				.addChoice('months', 'months')
-				.addChoice('quadrimester', 'quadrimester')
-				.addChoice('trimester', 'trimester')
-				.addChoice('semester', 'semester')
-				.addChoice('year', 'year')),
+		.addSubcommand(subcommand =>
+			subcommand.setName('date')
+				.setDescription('...')
+				.addStringOption(option =>
+				option.setName('title')
+						.setDescription('reminder\'s title')
+						.setRequired(true))
+				.addStringOption(option =>
+					option.setName('day')
+						.setDescription('...')
+						.setRequired(true))
+				.addStringOption(option =>
+					option.setName('month')
+						.setDescription('...')
+						.setRequired(true))
+				.addStringOption(option =>
+					option.setName('year')
+						.setDescription('...')))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('periodic')
+				.setDescription('...')
+				.addStringOption(option =>
+					option.setName('title')
+						.setDescription('reminder\'s title')
+						.setRequired(true))
+				.addNumberOption(option =>
+					option.setName('frequency')
+						.setDescription('...')
+						.setRequired(true))
+				.addStringOption(option =>
+					option.setName('unit')
+						.setDescription('...')
+						.setRequired(true)
+						.addChoice('seconds', 'seconds')
+						.addChoice('minutes', 'minutes')
+						.addChoice('hours', 'hours')
+						.addChoice('days', 'days')
+						.addChoice('weeks', 'weeks')
+						.addChoice('months', 'months')
+						.addChoice('quadrimester', 'quadrimester')
+						.addChoice('trimester', 'trimester')
+						.addChoice('semester', 'semester')
+						.addChoice('year', 'year')))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('time')
+				.setDescription('...')
+				.addStringOption(option =>
+					option.setName('title')
+						.setDescription('reminder\'s title')
+						.setRequired(true))
+				.addNumberOption(option =>
+					option.setName('number')
+						.setDescription('...')
+						.setRequired(true))
+				.addStringOption(option =>
+					option.setName('unit')
+						.setDescription('...')
+						.setRequired(true)
+						.addChoice('seconds', 'seconds')
+						.addChoice('minutes', 'minutes')
+						.addChoice('hours', 'hours')
+						.addChoice('days', 'days')
+						.addChoice('weeks', 'weeks')
+						.addChoice('months', 'months')
+						.addChoice('quadrimester', 'quadrimester')
+						.addChoice('trimester', 'trimester')
+						.addChoice('semester', 'semester')
+						.addChoice('year', 'year'))),
 	async execute(interaction) {
 		console.log(Date.now());
 		let Id = Date.now();
