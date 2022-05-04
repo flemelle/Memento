@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 var fs = require('fs');
+const cron = require('node-cron');
 let table = [];
+let croneTable = [];
 fs.readFile('./reminders.json', 'utf-8', (err, jsonString) => {
     if (err) {
         console.log(err);
@@ -17,7 +19,7 @@ fs.readFile('./reminders.json', 'utf-8', (err, jsonString) => {
 })
 
 class Entry{
-	constructor(userId, userTag, Id, title, unit, number, rmdDate) {
+	constructor(userId, userTag, Id, title, unit, number, rmdDate, repeat = false) {
 		this.title = title;
 		this.userTag = userTag;
 		this.userId = userId;
@@ -26,6 +28,7 @@ class Entry{
 		this.number = number;
 		this.Id = Id;
 		this.rmdDate = rmdDate;
+		this.repeat = repeat;
 	}
 }
 class Reminder{
@@ -134,7 +137,7 @@ module.exports = {
 			let minute = interaction.options.getNumber('minute');
 			let second = interaction.options.getNumber('second');
 			let rmdDate = new Date(year, month, day, hour, minute, second);
-			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, null, null, rmdDate);
+			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, null, null, rmdDate, false);
 			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
@@ -143,7 +146,7 @@ module.exports = {
 			let unit = interaction.options.getString('unit');
 			let number = interaction.options.getNumber('number');
 			let rmdDate = deltaT(number, unit);
-			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, number, rmdDate);
+			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, number, rmdDate, false);
 			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
@@ -152,20 +155,20 @@ module.exports = {
 			let frequency = interaction.options.getNumber('frequency');
 			let unit = interaction.options.getString('unit');
 			let rmdDate = deltaT(frequency, unit);
-			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, frequency, rmdDate);
+			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, frequency, rmdDate, true);
 			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
 			//incomplete
 		}
-		
-		
 		//interaction.reply('The liste of reminders is : \n' + tableString);
         //console.log('The liste of reminder is ', tableString);
 		//console.log('rmd has been called');
 		//interaction.reply('Reminder ' + title + ' set for ' + number + frequency + ' ' + unit);
 		//console.log(title, 'with Id', Id, 'set for', number, frequency, unit);
 		
+		
+	
         tableString = JSON.stringify(table, null, 2);
 		fs.writeFile('./reminders.json', tableString, err => {
 			if (err) {
@@ -174,6 +177,7 @@ module.exports = {
 				console.log('file successfully written');
 			}
 		});
+
 	},
 };
 
@@ -192,8 +196,6 @@ function deltaT(number, unit) {
 	let rmdHour = rmdDate.getHours();
 	let rmdMinute = rmdDate.getMinutes();
 	let rmdSecond = rmdDate.getSeconds();
-	
-	
 	//console.log(unit, rmdDate.getTimezoneOffset());
 	switch (unit) {
 		case "seconds":
@@ -222,5 +224,20 @@ function deltaT(number, unit) {
 	console.log('The reminder is set at : ', currentDate, ' for : ', rmdDate);
 	//interaction.reply('The reminder is set for : ' + rmdDate);
 	return rmdDate;
-	
+}
+// one for Time
+// another for the reste
+function reminderSetting(time) {
+	let deltaT = new Date();
+	deltaT = deltaT - time;
+	var task = cron.schedule('* * * * * *', () => {
+			console.log('Cron set up');
+		}, {
+		scheduled: false,
+		timezone: "Europe/France"
+		});
+
+		// start method is called to start the above defined cron job
+	//task.start();
+	return task;
 }

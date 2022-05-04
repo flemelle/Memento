@@ -6,5 +6,5 @@ module.exports = {
 		.setDescription('plouf plouf plouf!'),
 	async execute(interaction) {
 		interaction.reply('PLOUUF!!!');
-	},
+		},
 };
