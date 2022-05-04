@@ -5,8 +5,9 @@ module.exports = {
 		.setName('date')
 		.setDescription('The date'),
 	async execute(interaction) {
-		let date = Date.now();
+		let date = new Date();
 		interaction.reply('The date is ' + date);
 		console.log('The date is ', date);
+		console.log('the hour is :', date.getHours());
 	},
 };

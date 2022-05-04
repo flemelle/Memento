@@ -7,7 +7,7 @@ fs.readFile('./liste.json', 'utf-8', (err, jsonString) => {
     } else {
         try {
             const data = JSON.parse(jsonString);
-            console.log(data);
+            //console.log(data);
             
         } catch {
             console.log('Error parsing JSON', err);
@@ -37,6 +37,6 @@ module.exports = {
             }
         } )
         interaction.reply('The liste is : \n' + listeString);
-        console.log('The liste is ', listeString);
+        //console.log('The liste is ', listeString);
 	},
 };
