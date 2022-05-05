@@ -5,7 +5,6 @@ const { token } = require('./config.json');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 client.commands = new Collection();
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
-
 const commands = [];
 for (const file of eventFiles) {
 	const event = require(`./events/${file}`);

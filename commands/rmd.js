@@ -2,7 +2,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 var fs = require('fs');
 const cron = require('node-cron');
 let table = [];
-let croneTable = [];
+let date = new Date()
+let offset = date.getTimezoneOffset();
 fs.readFile('./reminders.json', 'utf-8', (err, jsonString) => {
     if (err) {
         console.log(err);
@@ -17,31 +18,19 @@ fs.readFile('./reminders.json', 'utf-8', (err, jsonString) => {
         table = JSON.parse(jsonString);
     }
 })
-
 class Entry{
-	constructor(userId, userTag, Id, title, unit, number, rmdDate, repeat = false) {
+	constructor(userId, userTag, Id, title, deltaT, rmdDate, repeat = false) {
 		this.title = title;
 		this.userTag = userTag;
 		this.userId = userId;
 		this.presentDate = new Date();
-		this.unit = unit;
-		this.number = number;
 		this.Id = Id;
 		this.rmdDate = rmdDate;
+		this.deltaT = deltaT;
 		this.repeat = repeat;
+		this.done = new Boolean(false);
 	}
 }
-class Reminder{
-	constructor(Id, title, userId, userTag, name, date){
-		this.Id = Id;
-		this.title = title;
-		this.userId = userId;
-		this.userTag = userTag;
-		this.name = name;
-		this.date = date;
-	}
-}
-
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('rmd')
@@ -63,10 +52,14 @@ module.exports = {
 						.setRequired(true))
 				.addNumberOption(option =>
 					option.setName('year')
-						.setDescription('...'))
+						.setDescription('...')
+						.setRequired(true)
+						.addChoice('2022', 2022))
 				.addNumberOption(option =>
 					option.setName('hour')
-						.setDescription('...'))
+						.setDescription('...')
+						.setRequired(true)
+						.addChoice('15', 15))
 				.addNumberOption(option =>
 					option.setName('minute')
 						.setDescription('...'))
@@ -131,44 +124,53 @@ module.exports = {
 		let title = interaction.options.getString('title');
 		if (interaction.options.getSubcommand() === 'date') {
 			let day = interaction.options.getNumber('day');
-			let month = interaction.options.getNumber('month') - 1;
+			let month = interaction.options.getNumber('month');
 			let year = interaction.options.getNumber('year');
 			let hour = interaction.options.getNumber('hour');
 			let minute = interaction.options.getNumber('minute');
 			let second = interaction.options.getNumber('second');
 			let rmdDate = new Date(year, month, day, hour, minute, second);
+			rmdDate = rmdDate + offset;
 			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, null, null, rmdDate, false);
-			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
+			console.log('The command rmd date has been called by', interaction.user.tag);
+			console.log('Reminder set for :', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
+			let currentDate = new Date();
+			currentDate = currentDate + offset;
+			//let deltaT = new Date(year - currentDate.getFullYear(), month - currentDate.getMonth(), day - currentDate.getDate(), hour - currentDate.getHours(), minute - currentDate.getMinutes(), second - currentDate.getSeconds());
+			console.log('CurrentDate :', currentDate);
+			console.log('RmdDate :',rmdDate);
+			//console.log('New deltaT :', deltaT);
+			console.log('Reminder set');
+			console.log('.................');
 		}
 		else if (interaction.options.getSubcommand() === 'time') {
 			let unit = interaction.options.getString('unit');
 			let number = interaction.options.getNumber('number');
-			let rmdDate = deltaT(number, unit);
+			let rmdDate = deltaT(number, unit, offset);
 			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, number, rmdDate, false);
-			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
+			console.log('The command rmd time has been called by', interaction.user.tag);
+			console.log('Reminder set for :', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
+			console.log('Reminder set');
+			console.log('.................');
 		}
 		else if (interaction.options.getSubcommand() === 'periodic') {
 			let frequency = interaction.options.getNumber('frequency');
 			let unit = interaction.options.getString('unit');
-			let rmdDate = deltaT(frequency, unit);
+			let rmdDate = deltaT(frequency, unit, offset);
 			let remind = new Entry(interaction.user.id, interaction.user.tag, Id, title, unit, frequency, rmdDate, true);
-			console.log('The command rmd date as been called by ', interaction.user.tag, ' Reminder set for : ', rmdDate);
+			console.log('The command rmd periodic has been called by', interaction.user.tag);
+			console.log('Reminder set for :', rmdDate);
 			interaction.reply('The reminder ' + title + ' is set for : ' + rmdDate);
 			table.push(remind);
+			console.log('Reminder set');
+			console.log('.................');
+			//reminderSetting(table);
 			//incomplete
 		}
-		//interaction.reply('The liste of reminders is : \n' + tableString);
-        //console.log('The liste of reminder is ', tableString);
-		//console.log('rmd has been called');
-		//interaction.reply('Reminder ' + title + ' set for ' + number + frequency + ' ' + unit);
-		//console.log(title, 'with Id', Id, 'set for', number, frequency, unit);
-		
-		
-	
         tableString = JSON.stringify(table, null, 2);
 		fs.writeFile('./reminders.json', tableString, err => {
 			if (err) {
@@ -177,11 +179,9 @@ module.exports = {
 				console.log('file successfully written');
 			}
 		});
-
 	},
 };
-
-function deltaT(number, unit) {
+function deltaT(number, unit, offset) {
 	let currentDate = new Date();
 	let currentYear = currentDate.getFullYear();
 	let currentMonth = currentDate.getMonth();
@@ -220,24 +220,28 @@ function deltaT(number, unit) {
 			rmdYear = currentYear + number;
 			break;
 		}
-	rmdDate = new Date(rmdYear, rmdMonth, rmdDayOfMonth, rmdHour, rmdMinute, rmdSecond);
+	rmdDate = new Date(rmdYear, rmdMonth, rmdDayOfMonth, rmdHour, rmdMinute, rmdSecond)
+	currentDate = currentDate + offset;
+	rmdDate = rmdDate + offset;;
 	console.log('The reminder is set at : ', currentDate, ' for : ', rmdDate);
 	//interaction.reply('The reminder is set for : ' + rmdDate);
 	return rmdDate;
 }
-// one for Time
-// another for the reste
-function reminderSetting(time) {
-	let deltaT = new Date();
-	deltaT = deltaT - time;
-	var task = cron.schedule('* * * * * *', () => {
-			console.log('Cron set up');
+function reminderSetting(tab) {
+	for (let i = 0; i < tab.length; i++) {
+		let Y = tab[i].rmdDate.getFullYear();
+		let Mo = tab[i].rmdDate.getMonth();
+		let D = tab[i].rmdDate.getDate();
+		let H = tab[i].rmdDate.getHours();
+		let Mi = tab[i].rmdDate.getMinutes();
+		let S = tab[i].rmdDate.getSeconds();
+		console.log(tab[i]);
+		var task = cron.schedule('S Mi H D Mo Y', () => {
+			console.log('Cron set up for :', rmdDate);
 		}, {
-		scheduled: false,
-		timezone: "Europe/France"
+			scheduled: false,
+			timezone: "Europe/Paris"
 		});
-
-		// start method is called to start the above defined cron job
-	//task.start();
-	return task;
+		task.start();
+	}
 }
